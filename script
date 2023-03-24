@@ -1,0 +1,49 @@
+# import libraries 
+import numpy as np
+import pandas as pd
+from nba_api.stats.endpoints import TeamGameLogs
+import datetime
+
+
+# List of season years (you can change to your prefrence)
+
+season_years = ['2022-23', 
+                '2021-22',
+                '2020-21',
+                '2019-20',
+                '2018-19',
+                '2017-18'
+                ]
+
+
+# Create an empty DataFrame to store the data
+games = pd.DataFrame()
+
+# Loop through the season years and append to the games df
+for season_year in season_years:
+
+    gamedatapull = TeamGameLogs(
+        league_id_nullable='',
+        team_id_nullable='',
+        season_nullable = season_year,
+        season_type_nullable='Regular Season'
+    )
+    
+    games_season = gamedatapull.get_data_frames()[0]
+    games = pd.concat([games, games_season], ignore_index=True)
+    
+    
+# Convert the 'date' column to datetime format
+games['GAME_DATE'] = pd.to_datetime(games['GAME_DATE'])
+
+# Convert the datetime format to your desired format
+games['GAME_DATE'] = games['GAME_DATE'].dt.strftime('%m/%d/%Y')
+
+# drop "Rank" columns since they seem to be unaccurate. 
+# note that columns must be contigous or next to each other for code to work
+games.drop(columns=games.loc[:,'GP_RANK':'PLUS_MINUS_RANK'], inplace=True)
+
+
+
+# EXPORT TO CSV
+games.to_csv(r'C:\Users\x\Documents\NBA Team Game Data.csv', index=False)
